@@ -2,13 +2,8 @@ name: Maven Lint and Test
 
 on:
   pull_request:
-    types:
-      - opened
-      - edited
     branches:
-      - feature/**
-      - hotfix/**
-      - task/**
+      - main
 
 jobs:
   lint:
