@@ -1,5 +1,7 @@
 # My Health Pass Auth Library
 
+[![Maven Lint and Test](https://github.com/Kerron-Hutton/my-health-pass-auth-library/actions/workflows/maven_lint_and_test.yml/badge.svg)](https://github.com/Kerron-Hutton/my-health-pass-auth-library/actions/workflows/maven_lint_and_test.yml)
+
 Standalone package that is used by the MyHealthPass team at ZS. This package was created  
 to secure the backend solution that manages health records. **Registration**, **Authentication**  
 and **Authorization** are just a few core functionality that this package implements.  
@@ -25,3 +27,4 @@ developer configure IntelliJ to integrate with our custom checkstyle configurati
     - File → Settings → Editor → Code Style → Java → Wrapping and Braces
     - CHECK `Ensure right margin is not exceeded`
     - Click OK
+
