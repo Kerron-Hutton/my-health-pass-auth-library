@@ -1,0 +1,2 @@
+org.springframework.test.context.ContextCustomizerFactory=\
+  com.zs.library.my_health_pass_auth.configuration.annotations.enable_postgres_test_container.PostgresTestContainerContextFactory
