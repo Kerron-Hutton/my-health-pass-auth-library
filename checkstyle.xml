@@ -56,9 +56,16 @@
         <module name="InvalidJavadocPosition"/>
         <module name="JavadocMethod"/>
         <module name="JavadocType"/>
-        <module name="JavadocVariable"/>
         <module name="JavadocStyle"/>
-        <module name="MissingJavadocMethod"/>
+
+        <module name="JavadocVariable">
+            <property name="scope" value="public"/>
+        </module>
+
+        <module name="MissingJavadocMethod">
+            <property name="allowMissingPropertyJavadoc" value="true"/>
+            <property name="tokens" value="METHOD_DEF"/>
+        </module>
 
         <!-- Checks for Naming Conventions.                  -->
         <!-- See https://checkstyle.org/config_naming.html -->
@@ -129,7 +136,6 @@
         <!-- See https://checkstyle.org/config_design.html -->
         <module name="DesignForExtension"/>
         <module name="FinalClass"/>
-        <module name="HideUtilityClassConstructor"/>
         <module name="InterfaceIsType"/>
         <module name="VisibilityModifier"/>
 
