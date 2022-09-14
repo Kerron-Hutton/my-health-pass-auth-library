@@ -127,4 +127,18 @@
         </plugins>
     </reporting>
 
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <name>a0nhspqnsazcj-artifactory-primary-0-releases</name>
+            <url>https://huttonkm.jfrog.io/artifactory/zs-libs-release</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>a0nhspqnsazcj-artifactory-primary-0-snapshots</name>
+            <url>https://huttonkm.jfrog.io/artifactory/zs-libs-snapshot</url>
+        </snapshotRepository>
+    </distributionManagement>
+
 </project>
