@@ -2,9 +2,9 @@ package com.zs.library.my_health_pass_auth.dto;
 
 import java.time.LocalDate;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 @Builder
 public class UserAccountDetailsDto {
 
