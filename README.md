@@ -2,7 +2,6 @@
 
 [![Maven Lint and Test](https://github.com/Kerron-Hutton/my-health-pass-auth-library/actions/workflows/maven_lint_and_test.yml/badge.svg)](https://github.com/Kerron-Hutton/my-health-pass-auth-library/actions/workflows/maven_lint_and_test.yml)
 ![Coverage](.github/badges/jacoco.svg)
-![Branches](.github/badges/branches.svg)
 
 Standalone package that is used by the MyHealthPass team at ZS. This package was created  
 to secure the backend solution that manages health records. **Registration**, **Authentication**  
