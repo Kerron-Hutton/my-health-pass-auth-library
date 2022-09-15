@@ -7,6 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.zs.library</groupId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <parent>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -52,6 +53,12 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <groupId>org.springframework.boot</groupId>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.passay</groupId>
+            <artifactId>passay</artifactId>
+            <version>1.6.2</version>
         </dependency>
 
         <dependency>
@@ -107,19 +114,6 @@
         </pluginManagement>
 
         <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
