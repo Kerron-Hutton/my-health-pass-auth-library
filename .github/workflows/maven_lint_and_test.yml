@@ -39,4 +39,4 @@ jobs:
           java-version: '17'
           cache: maven
       - name: Execute Maven Test
-        run: mvn clean checkstyle:check
+        run: mvn clean test
