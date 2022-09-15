@@ -40,7 +40,14 @@ jobs:
           cache: maven
       - name: Execute Maven Test
         run: mvn -B clean test
+      - name: Generate JaCoCo Report
+        run: mvn -B jacoco:report
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2
         with:
           generate-branches-badge: true
+      - name: Upload JaCoCo coverage Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
