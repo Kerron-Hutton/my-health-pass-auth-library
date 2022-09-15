@@ -22,7 +22,7 @@ jobs:
           java-version: '17'
           cache: maven
       - name: Execute Checkstyle Lint
-        run: mvn clean checkstyle:check -DconfigLocation=checkstyle.xml
+        run: mvn clean checkstyle:check
   test:
     name: Maven Test
     needs: lint
