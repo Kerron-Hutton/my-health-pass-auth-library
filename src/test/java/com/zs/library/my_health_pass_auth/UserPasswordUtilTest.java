@@ -7,7 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("User Password Helper Test")
-class UserPasswordHelperTest {
+class UserPasswordUtilTest {
 
   private final Faker faker = new Faker();
 
@@ -18,7 +18,7 @@ class UserPasswordHelperTest {
     String password = faker.internet().password();
 
     // When
-    String passwordHash = UserPasswordHelper.generatePasswordHash(password);
+    String passwordHash = UserPasswordUtil.generatePasswordHash(password);
 
     // Then
     assertThat(passwordHash).hasSize(64);
@@ -31,8 +31,8 @@ class UserPasswordHelperTest {
     String password = faker.internet().password();
 
     //When
-    String passwordHashOne = UserPasswordHelper.generatePasswordHash(password);
-    String passwordHashTwo = UserPasswordHelper.generatePasswordHash(password);
+    String passwordHashOne = UserPasswordUtil.generatePasswordHash(password);
+    String passwordHashTwo = UserPasswordUtil.generatePasswordHash(password);
 
     // Then
     assertThat(passwordHashOne).isEqualTo(passwordHashTwo);
@@ -46,8 +46,8 @@ class UserPasswordHelperTest {
     String passwordTwo = faker.internet().password();
 
     //When
-    String passwordHashOne = UserPasswordHelper.generatePasswordHash(passwordOne);
-    String passwordHashTwo = UserPasswordHelper.generatePasswordHash(passwordTwo);
+    String passwordHashOne = UserPasswordUtil.generatePasswordHash(passwordOne);
+    String passwordHashTwo = UserPasswordUtil.generatePasswordHash(passwordTwo);
 
     // Then
     assertThat(passwordHashOne).isNotEqualTo(passwordHashTwo);
@@ -62,7 +62,7 @@ class UserPasswordHelperTest {
     String passwordHash = faker.crypto().sha256();
 
     // When
-    Boolean isValid = UserPasswordHelper.validatePasswordAgainstHash(password, passwordHash);
+    Boolean isValid = UserPasswordUtil.validatePasswordAgainstHash(password, passwordHash);
 
     // Then
     assertThat(isValid).isFalse();
@@ -74,50 +74,13 @@ class UserPasswordHelperTest {
     // Given
     String password = faker.internet().password();
 
-    String passwordHash = UserPasswordHelper.generatePasswordHash(password);
+    String passwordHash = UserPasswordUtil.generatePasswordHash(password);
 
     // When
-    Boolean isValid = UserPasswordHelper.validatePasswordAgainstHash(password, passwordHash);
+    Boolean isValid = UserPasswordUtil.validatePasswordAgainstHash(password, passwordHash);
 
     // Then
     assertThat(isValid).isTrue();
-  }
-
-  @Test
-  @DisplayName("It should pass if all password criteria is met")
-  void itShouldPassPasswordStrengthValidation() {
-    // Given
-    String password = faker.internet().password(
-        UserPasswordHelper.PASSWORD_MIN_CONSTRAINT,
-        UserPasswordHelper.PASSWORD_MAX_CONSTRAINT,
-        true,
-        true,
-        true
-    );
-
-    // When
-    String validationMessage = UserPasswordHelper.validatePasswordStrength(password);
-
-    // Then
-    assertThat(validationMessage).isBlank();
-  }
-
-  @Test
-  @DisplayName("It should fail if password criteria is not met")
-  void itShouldFailPasswordStrengthValidation() {
-    // Given
-    String password = faker.internet().password(
-        UserPasswordHelper.PASSWORD_MIN_CONSTRAINT,
-        UserPasswordHelper.PASSWORD_MAX_CONSTRAINT,
-        false,
-        true
-    );
-
-    // When
-    String validationMessage = UserPasswordHelper.validatePasswordStrength(password);
-
-    // Then
-    assertThat(validationMessage).isNotBlank();
   }
 
 }

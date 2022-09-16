@@ -60,8 +60,8 @@ class IdentityManagementTest {
           .dateOfBirth(dateOfBirth);
 
       validPassword = faker.internet().password(
-          UserPasswordHelper.PASSWORD_MIN_CONSTRAINT,
-          UserPasswordHelper.PASSWORD_MAX_CONSTRAINT,
+          UserPasswordUtil.PASSWORD_MIN_CONSTRAINT,
+          UserPasswordUtil.PASSWORD_MAX_CONSTRAINT,
           true,
           true,
           true
@@ -100,7 +100,7 @@ class IdentityManagementTest {
       UserAccountDetailsDto accountDetails = accountDetailsBuilder.build();
 
       String invalidPassword = faker.internet().password(
-          1, UserPasswordHelper.PASSWORD_MIN_CONSTRAINT - 1
+          1, UserPasswordUtil.PASSWORD_MIN_CONSTRAINT - 1
       );
 
       // When

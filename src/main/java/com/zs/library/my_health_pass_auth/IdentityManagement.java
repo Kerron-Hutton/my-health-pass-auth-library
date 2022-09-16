@@ -1,5 +1,7 @@
 package com.zs.library.my_health_pass_auth;
 
+import static com.zs.library.my_health_pass_auth.AppSecretUtil.PASSWORD_VALIDATION_RULES;
+
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
 import java.time.LocalDate;
@@ -21,17 +23,19 @@ public class IdentityManagement {
    */
   @Transactional
   public Long register(UserAccountDetailsDto accountDetails, String password) {
-    val validationMessages = UserPasswordHelper.validatePasswordStrength(password);
+    val validationMessage = AppSecretUtil.validateSecretAgainstRules(
+        password, PASSWORD_VALIDATION_RULES
+    );
 
-    if (!validationMessages.isBlank()) {
-      throw new RuntimeException(validationMessages);
+    if (validationMessage.isPresent()) {
+      throw new RuntimeException(validationMessage.get());
     }
 
     if (accountDetails.getDateOfBirth().isAfter(LocalDate.now())) {
       throw new RuntimeException("Date of birth must not be in the future");
     }
 
-    val passwordHash = UserPasswordHelper.generatePasswordHash(password);
+    val passwordHash = UserPasswordUtil.generatePasswordHash(password);
 
     val userToBeRegistered = new UserEntity(accountDetails, passwordHash);
 
