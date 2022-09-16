@@ -1,5 +1,6 @@
 package com.zs.library.my_health_pass_auth;
 
+import static com.zs.library.my_health_pass_auth.AppSecretUtil.PASSWORD_VALIDATION_RULES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -59,12 +60,8 @@ class IdentityManagementTest {
           .lastName(faker.name().lastName())
           .dateOfBirth(dateOfBirth);
 
-      validPassword = faker.internet().password(
-          UserPasswordUtil.PASSWORD_MIN_CONSTRAINT,
-          UserPasswordUtil.PASSWORD_MAX_CONSTRAINT,
-          true,
-          true,
-          true
+      validPassword = PasswordGeneratorUtil.generateValidPassword(
+          PASSWORD_VALIDATION_RULES
       );
     }
 
@@ -99,8 +96,8 @@ class IdentityManagementTest {
       // Given
       UserAccountDetailsDto accountDetails = accountDetailsBuilder.build();
 
-      String invalidPassword = faker.internet().password(
-          1, UserPasswordUtil.PASSWORD_MIN_CONSTRAINT - 1
+      String invalidPassword = PasswordGeneratorUtil.generateInValidPassword(
+          PASSWORD_VALIDATION_RULES
       );
 
       // When
