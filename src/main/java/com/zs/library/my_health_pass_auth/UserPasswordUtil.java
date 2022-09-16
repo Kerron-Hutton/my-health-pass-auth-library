@@ -6,10 +6,6 @@ import lombok.val;
 
 final class UserPasswordUtil {
 
-  public static final int PASSWORD_MAX_CONSTRAINT = 30;
-
-  public static final int PASSWORD_MIN_CONSTRAINT = 8;
-
   private UserPasswordUtil() {
   }
 
