@@ -23,6 +23,6 @@ jobs:
           cache: 'maven'
 
       - name: GitHub Packages Deploy
-        run: mvn --quiet -B -DskipTests -Dpackage.version=${{ github.ref_name }} clean deploy
+        run: mvn -B -DskipTests -Dpackage.version=${{ github.ref_name }} clean deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
