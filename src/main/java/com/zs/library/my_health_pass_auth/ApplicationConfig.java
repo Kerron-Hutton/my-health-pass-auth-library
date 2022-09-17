@@ -4,10 +4,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
+import com.zs.library.my_health_pass_auth.repository.UserRepository;
 import liquibase.integration.spring.SpringLiquibase;
 import lombok.val;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
@@ -68,6 +70,14 @@ class ApplicationConfig {
     val jwtTokenUtil = new JwtTokenUtil(environment);
 
     return new IdentityManagement(userRepository, jwtTokenUtil, environment);
+  }
+
+  @Bean
+  @Primary
+  public UserRepository userRepositoryBean(EntityManager entityManager) {
+    val factory = new JpaRepositoryFactory(entityManager);
+
+    return factory.getRepository(UserRepository.class);
   }
 
 }
