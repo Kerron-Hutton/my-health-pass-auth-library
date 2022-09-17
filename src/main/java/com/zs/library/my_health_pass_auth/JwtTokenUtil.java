@@ -49,10 +49,10 @@ class JwtTokenUtil {
     );
 
     return UserIdentityDto.builder()
+        .id(Long.parseLong(payload.get("id").toString()))
         .firstName((String) payload.get("firstName"))
         .lastName((String) payload.get("lastName"))
         .username((String) payload.get("username"))
-        .id((long) payload.get("id"))
         .build();
   }
 
