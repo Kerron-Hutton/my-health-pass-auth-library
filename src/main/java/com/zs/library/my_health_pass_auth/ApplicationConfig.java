@@ -8,6 +8,7 @@ import liquibase.integration.spring.SpringLiquibase;
 import lombok.val;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -59,12 +60,14 @@ class ApplicationConfig {
 
 
   @Bean
-  public IdentityManagement identityManagementBean(EntityManager entityManager) {
+  public IdentityManagement identityManagementBean(EntityManager entityManager, Environment environment) {
     val factory = new JpaRepositoryFactory(entityManager);
 
     val userRepository = factory.getRepository(UserEntityRepository.class);
 
-    return new IdentityManagement(userRepository);
+    val jwtTokenUtil = new JwtTokenUtil(environment);
+
+    return new IdentityManagement(userRepository, jwtTokenUtil, environment);
   }
 
 }
