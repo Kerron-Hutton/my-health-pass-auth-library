@@ -69,7 +69,7 @@ on **[Working with the Apache Maven registry](https://docs.github.com/en/package
                 </repository>
                 <repository>
                     <id>github</id>
-                    <url>https://maven.pkg.github.com/Kerron-Hutton/maven</url>
+                    <url>https://maven.pkg.github.com/Kerron-Hutton/my-health-pass-auth-library</url>
                     <snapshots>
                         <enabled>true</enabled>
                     </snapshots>
