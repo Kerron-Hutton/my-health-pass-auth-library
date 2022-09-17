@@ -215,7 +215,7 @@
         <repository>
             <id>github</id>
             <name>GitHub Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/Kerron-Hutton/maven</url>
+            <url>https://maven.pkg.github.com/Kerron-Hutton/my-health-pass-auth-library</url>
         </repository>
     </distributionManagement>
 
