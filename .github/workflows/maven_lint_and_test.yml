@@ -24,7 +24,7 @@ jobs:
           cache: maven
 
       - name: Execute Checkstyle Lint
-        run: mvn -B clean checkstyle:check
+        run: mvn --quiet -B clean checkstyle:check
   test:
     name: Maven Test
     needs: lint
@@ -43,7 +43,7 @@ jobs:
           cache: maven
 
       - name: Execute Maven Test
-        run: mvn -B clean test
+        run: mvn --quiet -B clean test
 
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2

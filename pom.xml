@@ -2,12 +2,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <artifactId>my_health_pass_auth</artifactId>
+    <artifactId>my-health-pass-auth</artifactId>
     <name>My Health Pass Auth Library</name>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.zs.library</groupId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
+
+    <version>${package.version}</version>
+
+    <description>
+        Standalone package that is used by the MyHealthPass team at ZS. This package was created
+        to secure the backend solution that manages health records. Registration, Authentication
+        and Authorization are just a few core functionality that this package implements.
+    </description>
 
     <parent>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -17,6 +24,7 @@
     </parent>
 
     <properties>
+        <package.version>1.0.0-SNAPSHOT</package.version>
         <java.version>17</java.version>
     </properties>
 
@@ -205,16 +213,10 @@
 
     <distributionManagement>
         <repository>
-            <id>central</id>
-            <name>a0nhspqnsazcj-artifactory-primary-0-releases</name>
-            <url>https://huttonkm.jfrog.io/artifactory/zs-libs-release</url>
+            <id>github</id>
+            <name>GitHub Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/Kerron-Hutton/maven</url>
         </repository>
-
-        <snapshotRepository>
-            <id>snapshots</id>
-            <name>a0nhspqnsazcj-artifactory-primary-0-snapshots</name>
-            <url>https://huttonkm.jfrog.io/artifactory/zs-libs-snapshot</url>
-        </snapshotRepository>
     </distributionManagement>
 
 </project>
