@@ -1,16 +1,29 @@
 package com.zs.library.my_health_pass_auth;
 
+import static com.zs.library.my_health_pass_auth.AppSecretUtil.PASSWORD_VALIDATION_RULES;
+import static com.zs.library.my_health_pass_auth.EnvironmentVariableKeys.AUTHENTICATION_ACCOUNT_LOCK_DURATION;
+import static com.zs.library.my_health_pass_auth.EnvironmentVariableKeys.AUTHENTICATION_MAX_LOGIN_ATTEMPT;
+
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
+import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.springframework.core.env.Environment;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class IdentityManagement {
 
   private final UserEntityRepository repository;
+
+  private final JwtTokenUtil jwtTokenUtil;
+
+  private final Environment environment;
 
   /**
    * Registers a new user in the MyHealthPass Application.
@@ -21,23 +34,104 @@ public class IdentityManagement {
    */
   @Transactional
   public Long register(UserAccountDetailsDto accountDetails, String password) {
-    val validationMessages = UserPasswordHelper.validatePasswordStrength(password);
+    val validationMessage = AppSecretUtil.validateSecretAgainstRules(
+        password, PASSWORD_VALIDATION_RULES
+    );
 
-    if (!validationMessages.isBlank()) {
-      throw new RuntimeException(validationMessages);
+    if (validationMessage.isPresent()) {
+      throw new RuntimeException(validationMessage.get());
     }
 
     if (accountDetails.getDateOfBirth().isAfter(LocalDate.now())) {
       throw new RuntimeException("Date of birth must not be in the future");
     }
 
-    val passwordHash = UserPasswordHelper.generatePasswordHash(password);
+    val passwordHash = UserPasswordUtil.generatePasswordHash(password);
 
     val userToBeRegistered = new UserEntity(accountDetails, passwordHash);
 
     val registeredUser = repository.save(userToBeRegistered);
 
     return registeredUser.getId();
+  }
+
+  /**
+   * Authenticate user their credentials.
+   *
+   * @param username user defined application identifier.
+   * @param password user secret credentials required for identification
+   * @return valid token if authentication is successful
+   */
+  @Transactional
+  public Optional<String> login(String username, String password) {
+    val user = repository.findByUsername(username).orElse(null);
+
+    if (user == null) {
+      return Optional.empty();
+    }
+
+    handleAccountLockStatus(user);
+
+    val isPasswordValid = UserPasswordUtil.validatePasswordAgainstHash(
+        password, user.getPassword()
+    );
+
+    if (isPasswordValid) {
+      val userIdentity = UserIdentityDto.builder()
+          .firstName(user.getFirstName())
+          .lastName(user.getLastName())
+          .username(user.getUsername())
+          .id(user.getId())
+          .build();
+
+      user.setAccountLockTimestamp(null);
+      user.setAccountLocked(false);
+      user.setFailedLogins(0);
+
+      return Optional.of(
+          jwtTokenUtil.generateUserAuthToken(userIdentity)
+      );
+    }
+
+    user.setFailedLogins(user.getFailedLogins() + 1);
+
+    val maxLoginAttempt = Integer.parseInt(
+        environment.getRequiredProperty(AUTHENTICATION_MAX_LOGIN_ATTEMPT)
+    );
+
+    if (user.getFailedLogins() >= maxLoginAttempt) {
+      user.setAccountLockTimestamp(LocalDateTime.now());
+      user.setAccountLocked(true);
+    }
+
+    repository.save(user);
+
+    return Optional.empty();
+  }
+
+  private void handleAccountLockStatus(UserEntity user) {
+    val accountLockTimeout = Integer.parseInt(
+        environment.getRequiredProperty(AUTHENTICATION_ACCOUNT_LOCK_DURATION)
+    );
+
+    if (user.isAccountLocked()) {
+      val durationSinceAccountLock = Duration.between(
+              user.getAccountLockTimestamp(), LocalDateTime.now()
+          )
+          .toMinutes();
+
+      if (durationSinceAccountLock > 0 && durationSinceAccountLock < accountLockTimeout) {
+        throw new RuntimeException(
+            String.format("User account is locked... Please try again in %s minutes",
+                accountLockTimeout - durationSinceAccountLock
+            )
+        );
+      }
+
+      user.setAccountLockTimestamp(null);
+      user.setAccountLocked(false);
+      user.setFailedLogins(0);
+    }
   }
 
 }
