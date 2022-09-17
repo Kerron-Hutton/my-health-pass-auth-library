@@ -10,11 +10,14 @@ import javax.persistence.Table;
 
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @Table(name = "\"user\"")
 public class UserEntity {
@@ -38,6 +41,15 @@ public class UserEntity {
 
   @Column(name = "password", nullable = false, length = 64)
   private String password;
+
+  @Column(name = "failed_logins")
+  private int failedLogins;
+
+  @Column(name = "is_account_locked", columnDefinition = "boolean default false")
+  private boolean isAccountLocked;
+
+  @Column(name = "account_lock_timestamp")
+  private LocalDateTime accountLockTimestamp;
 
   public UserEntity(UserAccountDetailsDto accountDetails, String passwordHash) {
     this.firstName = accountDetails.getFirstName();
