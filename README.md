@@ -36,7 +36,9 @@ developer configure IntelliJ to integrate with our custom checkstyle configurati
 
 In order to install our library the below configurations should be added to your `~/.m2/settings.xml` file.  
 Replace `GITHUB_USERNAME` and `GITHUB_TOKEN` with your GitHub information. Additional information can  
-be found on **[Working with the Apache Maven registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry)**.
+be found
+on **[Working with the Apache Maven registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry)**
+.
 
 ***Note:*** Your `GITHUB_TOKEN` must have at least the `packages:read` scope assigned to it.
 
@@ -138,9 +140,11 @@ public class MyHealthPass {
           accountDetailsDto.getUsername(), password
       );
 
+      UserIdentityDto userIdentity = identity.authenticate(userAuthToken.get());
+
       System.out.println(registeredUser.get());
 
-      System.out.println(userAuthToken.get());
+      System.out.println(userIdentity);
 
     };
   }
