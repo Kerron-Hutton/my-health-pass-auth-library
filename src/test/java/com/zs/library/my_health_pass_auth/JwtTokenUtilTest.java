@@ -8,6 +8,8 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.github.javafaker.Faker;
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -103,4 +105,51 @@ class JwtTokenUtilTest {
       assertThat(data.getId()).isEqualTo(userIdentityInput.getId());
     });
   }
+
+  @Test
+  @DisplayName("It should throw signature exception if the token signature is in valid")
+  void itShouldThrowSignatureException() {
+    // Given
+    String secret = PasswordGeneratorUtil.generateValidPassword(
+        JWT_SECRET_VALIDATION_RULES
+    );
+
+    // When
+    Mockito
+        .when(environment.getRequiredProperty(AUTHENTICATION_JWT_SECRET_PROPERTY))
+        .thenReturn(secret);
+
+    String token = underTest.generateUserAuthToken(userIdentityInput);
+
+    Throwable throwable = catchThrowable(
+        () -> underTest.getUserIdentityIfTokenIsValid(String.format("%s_as3", token))
+    );
+
+    // Then
+    assertThat(throwable).isInstanceOf(SignatureException.class);
+  }
+
+  @Test
+  @DisplayName("It should throw malformed exception if token is not a valid jwt")
+  void itShouldThrowMalformedException() {
+    // Given
+    String secret = PasswordGeneratorUtil.generateValidPassword(
+        JWT_SECRET_VALIDATION_RULES
+    );
+
+    String token = faker.internet().slug();
+
+    // When
+    Mockito
+        .when(environment.getRequiredProperty(AUTHENTICATION_JWT_SECRET_PROPERTY))
+        .thenReturn(secret);
+
+    Throwable throwable = catchThrowable(
+        () -> underTest.getUserIdentityIfTokenIsValid(token)
+    );
+
+    // Then
+    assertThat(throwable).isInstanceOf(MalformedJwtException.class);
+  }
+
 }
