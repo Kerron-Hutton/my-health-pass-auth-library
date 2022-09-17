@@ -9,13 +9,13 @@ import javax.persistence.PersistenceException;
 import com.github.javafaker.Faker;
 import com.zs.library.my_health_pass_auth.configuration.annotations.enable_postgres_test_container.PostgresTestContainer;
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
+import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,118 +33,141 @@ class IdentityManagementTest {
 
   private final Faker faker = new Faker();
 
+  private UserAccountDetailsDto.UserAccountDetailsDtoBuilder accountDetailsBuilder;
+
+  private String validPassword;
+
+
   @Autowired
   IdentityManagementTest(UserEntityRepository userRepository, IdentityManagement underTest) {
     this.userRepository = userRepository;
     this.underTest = underTest;
   }
 
-  @Nested
-  @PostgresTestContainer
-  @DisplayName("User Registration Test")
-  class UserRegistrationTest {
+  @BeforeEach
+  void setup() {
+    LocalDate dateOfBirth = faker.date().birthday().toInstant()
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate();
 
-    private UserAccountDetailsDto.UserAccountDetailsDtoBuilder accountDetailsBuilder;
+    accountDetailsBuilder = UserAccountDetailsDto.builder()
+        .username(faker.internet().emailAddress())
+        .firstName(faker.name().firstName())
+        .lastName(faker.name().lastName())
+        .dateOfBirth(dateOfBirth);
 
-    private String validPassword;
+    validPassword = PasswordGeneratorUtil.generateValidPassword(
+        PASSWORD_VALIDATION_RULES
+    );
+  }
 
-    @BeforeEach
-    void setup() {
-      LocalDate dateOfBirth = faker.date().birthday().toInstant()
-          .atZone(ZoneId.systemDefault())
-          .toLocalDate();
+  @Test
+  @DisplayName("It should successfully register new user")
+  void itShouldRegisterUser() {
+    // Given
+    UserAccountDetailsDto accountDetails = accountDetailsBuilder.build();
 
-      accountDetailsBuilder = UserAccountDetailsDto.builder()
-          .username(faker.internet().emailAddress())
-          .firstName(faker.name().firstName())
-          .lastName(faker.name().lastName())
-          .dateOfBirth(dateOfBirth);
+    // When
+    long registeredUserId = underTest.register(accountDetails, validPassword);
 
-      validPassword = PasswordGeneratorUtil.generateValidPassword(
-          PASSWORD_VALIDATION_RULES
-      );
-    }
+    Optional<UserEntity> user = userRepository.findById(registeredUserId);
 
-    @Test
-    @DisplayName("It should successfully register new user")
-    void itShouldRegisterUser() {
-      // Given
-      UserAccountDetailsDto accountDetails = accountDetailsBuilder.build();
+    // Then
+    assertThat(user).isPresent();
 
-      // When
-      long registeredUserId = underTest.register(accountDetails, validPassword);
+    assertThat(user.get()).satisfies(userEntity -> {
+      assertThat(userEntity.getUsername()).isEqualTo(accountDetails.getUsername());
+      assertThat(userEntity.getFirstName()).isEqualTo(accountDetails.getFirstName());
 
-      Optional<UserEntity> user = userRepository.findById(registeredUserId);
+      assertThat(userEntity.getDateOfBirth()).isEqualTo(accountDetails.getDateOfBirth());
+      assertThat(userEntity.getLastName()).isEqualTo(accountDetails.getLastName());
 
-      // Then
-      assertThat(user).isPresent();
+      assertThat(userEntity.getPassword()).hasSize(64);
+    });
+  }
 
-      assertThat(user.get()).satisfies(userEntity -> {
-        assertThat(userEntity.getUsername()).isEqualTo(accountDetails.getUsername());
-        assertThat(userEntity.getFirstName()).isEqualTo(accountDetails.getFirstName());
+  @Test
+  @DisplayName("It should throw exception if user password is not valid")
+  void itShouldThrowExceptionIfPasswordIsNotValid() {
+    // Given
+    UserAccountDetailsDto accountDetails = accountDetailsBuilder.build();
 
-        assertThat(userEntity.getDateOfBirth()).isEqualTo(accountDetails.getDateOfBirth());
-        assertThat(userEntity.getLastName()).isEqualTo(accountDetails.getLastName());
+    String invalidPassword = PasswordGeneratorUtil.generateInValidPassword(
+        PASSWORD_VALIDATION_RULES
+    );
 
-        assertThat(userEntity.getPassword()).hasSize(64);
-      });
-    }
+    // When
+    Throwable throwable = catchThrowable(
+        () -> underTest.register(accountDetails, invalidPassword)
+    );
 
-    @Test
-    @DisplayName("It should throw exception if user password is not valid")
-    void itShouldThrowExceptionIfPasswordIsNotValid() {
-      // Given
-      UserAccountDetailsDto accountDetails = accountDetailsBuilder.build();
+    // Then
+    assertThat(throwable).isInstanceOf(RuntimeException.class);
+  }
 
-      String invalidPassword = PasswordGeneratorUtil.generateInValidPassword(
-          PASSWORD_VALIDATION_RULES
-      );
+  @Test
+  @DisplayName("It should throw exception if date of birth is in the future")
+  void itShouldThrowExceptionIfDateOfBirthIsNotValid() {
+    // Given
+    LocalDate futureDateOfBirth = LocalDate.now().plusDays(1);
 
-      // When
-      Throwable throwable = catchThrowable(
-          () -> underTest.register(accountDetails, invalidPassword)
-      );
+    UserAccountDetailsDto accountDetails = accountDetailsBuilder
+        .dateOfBirth(futureDateOfBirth)
+        .build();
 
-      // Then
-      assertThat(throwable).isInstanceOf(RuntimeException.class);
-    }
+    // When
+    Throwable throwable = catchThrowable(
+        () -> underTest.register(accountDetails, validPassword)
+    );
 
-    @Test
-    @DisplayName("It should throw exception if date of birth is in the future")
-    void itShouldThrowExceptionIfDateOfBirthIsNotValid() {
-      // Given
-      LocalDate futureDateOfBirth = LocalDate.now().plusDays(1);
+    // Then
+    assertThat(throwable).isInstanceOf(RuntimeException.class);
+  }
 
-      UserAccountDetailsDto accountDetails = accountDetailsBuilder
-          .dateOfBirth(futureDateOfBirth)
-          .build();
+  @Test
+  @DisplayName("It should throw exception if any account detail information is null")
+  void itShouldThrowExceptionIfAccountDetailIsNotValid() {
+    // Given
+    UserAccountDetailsDto accountDetails = accountDetailsBuilder
+        .username(null)
+        .build();
 
-      // When
-      Throwable throwable = catchThrowable(
-          () -> underTest.register(accountDetails, validPassword)
-      );
+    // When
+    Throwable throwable = catchThrowable(
+        () -> underTest.register(accountDetails, validPassword)
+    );
 
-      // Then
-      assertThat(throwable).isInstanceOf(RuntimeException.class);
-    }
+    // Then
+    assertThat(throwable).isInstanceOf(PersistenceException.class);
+  }
 
-    @Test
-    @DisplayName("It should throw exception if any account detail information is null")
-    void itShouldThrowExceptionIfAccountDetailIsNotValid() {
-      // Given
-      UserAccountDetailsDto accountDetails = accountDetailsBuilder
-          .username(null)
-          .build();
+  @Test
+  @DisplayName("It should return user identity data if token is valid")
+  void itShouldTokenIdentityData() {
+    // Given
+    UserAccountDetailsDto accountDetails = accountDetailsBuilder.build();
 
-      // When
-      Throwable throwable = catchThrowable(
-          () -> underTest.register(accountDetails, validPassword)
-      );
+    // When
+    long registeredUserId = underTest.register(accountDetails, validPassword);
 
-      // Then
-      assertThat(throwable).isInstanceOf(PersistenceException.class);
-    }
+    UserEntity user = userRepository.findById(registeredUserId)
+        .orElse(null);
 
+    String token = underTest.login(user.getUsername(), validPassword)
+        .orElse(null);
+
+    UserIdentityDto userIdentity = underTest.authenticate(token);
+
+    // Then
+    assertThat(userIdentity)
+        .isNotNull()
+        .satisfies(data -> {
+          assertThat(data.getFirstName()).isEqualTo(user.getFirstName());
+          assertThat(data.getLastName()).isEqualTo(user.getLastName());
+
+          assertThat(data.getUsername()).isEqualTo(user.getUsername());
+          assertThat(data.getId()).isEqualTo(user.getId());
+        });
   }
 
 }
