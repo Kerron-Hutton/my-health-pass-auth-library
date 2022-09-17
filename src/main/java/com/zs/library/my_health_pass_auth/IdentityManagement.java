@@ -56,6 +56,16 @@ public class IdentityManagement {
   }
 
   /**
+   * Validates the signature of provided token.
+   *
+   * @param token token given to user after successful login
+   * @return user identity if token is validX
+   */
+  public UserIdentityDto authenticate(String token) {
+    return jwtTokenUtil.getUserIdentityIfTokenIsValid(token);
+  }
+
+  /**
    * Authenticate user their credentials.
    *
    * @param username user defined application identifier.
