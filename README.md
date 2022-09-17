@@ -132,15 +132,17 @@ public class MyHealthPass {
           accountDetailsDto, password
       );
 
-      Optional<UserEntity> registeredUser = repository.findById(registerUserId);
+       Optional<UserEntity> registeredUser = repository.findById(registerUserId);
 
-      Optional<String> userAuthToken = identity.login(
-          accountDetailsDto.getUsername(), password
-      );
+       Optional<String> userAuthToken = identity.login(
+               accountDetailsDto.getUsername(), password
+       );
 
-      System.out.println(registeredUser.get());
+       UserIdentityDto userIdentity = identity.authenticate(userAuthToken.get());
 
-      System.out.println(userAuthToken.get());
+       System.out.println(registeredUser.get());
+
+       System.out.println(userIdentity);
 
     };
   }
