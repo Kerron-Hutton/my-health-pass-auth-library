@@ -31,12 +31,14 @@ class LoginRequestTest {
 
   @BeforeEach
   void setup() {
+    FileServerUtil fileServerUtil = Mockito.mock(FileServerUtil.class);
+
     userRepository = Mockito.mock(UserEntityRepository.class);
     jwtTokenUtil = Mockito.mock(JwtTokenUtil.class);
     environment = Mockito.mock(Environment.class);
 
     underTest = new IdentityManagement(
-        userRepository, jwtTokenUtil, environment
+        userRepository, fileServerUtil, jwtTokenUtil, environment
     );
   }
 

@@ -11,6 +11,7 @@ import com.zs.library.my_health_pass_auth.configuration.annotations.enable_postg
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
+import com.zs.library.my_health_pass_auth.pojo.FileDocument;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
@@ -168,6 +169,73 @@ class IdentityManagementTest {
           assertThat(data.getUsername()).isEqualTo(user.getUsername());
           assertThat(data.getId()).isEqualTo(user.getId());
         });
+  }
+
+  @Test
+  @DisplayName("It should return empty profile picture if user does not exist")
+  void itShouldReturnEmptyOptional() {
+    // Given
+    Long userId = faker.random().nextLong();
+
+    // When
+    Optional<FileDocument> document = underTest.getUserProfilePicture(userId);
+
+    // Then
+    assertThat(document).isNotPresent();
+  }
+
+  @Test
+  @DisplayName("It should throw exception if file data not defined")
+  void itShouldThrowExceptionIfFileDataIsNotDefined() {
+    // Given
+    String filename = faker.internet().slug();
+
+    FileDocument document = FileDocument.builder()
+        .filename(filename)
+        .build();
+
+    UserAccountDetailsDto accountDetails = accountDetailsBuilder
+        .fileDocument(document)
+        .build();
+
+    // When
+    Throwable throwable = catchThrowable(
+        () -> underTest.register(accountDetails, validPassword)
+    );
+
+    // Then
+    assertThat(throwable).isInstanceOf(RuntimeException.class);
+  }
+
+  @Test
+  @DisplayName("It should retrieve profile picture if defined")
+  void itShouldRetrieveProfilePicture() {
+    // Given
+    String filename = faker.internet().slug();
+
+    FileDocument document = FileDocument.builder()
+        .bytes(filename.getBytes())
+        .filename(filename)
+        .build();
+
+    UserAccountDetailsDto accountDetails = accountDetailsBuilder
+        .fileDocument(document)
+        .build();
+
+    // When
+    long registeredUserId = underTest.register(accountDetails, validPassword);
+
+    Optional<FileDocument> userProfilePicture = underTest.getUserProfilePicture(
+        registeredUserId
+    );
+
+    // Then
+    assertThat(userProfilePicture).isPresent();
+
+    assertThat(userProfilePicture.get()).satisfies(data -> {
+      assertThat(data.getFilename()).isEqualTo(document.getFilename());
+      assertThat(data.getBytes()).isEqualTo(document.getBytes());
+    });
   }
 
 }
