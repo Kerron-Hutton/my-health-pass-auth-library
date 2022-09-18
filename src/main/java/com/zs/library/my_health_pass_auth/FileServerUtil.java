@@ -43,6 +43,15 @@ class FileServerUtil {
     }
   }
 
+  public void deleteFileFromServer(String filename) {
+    try {
+      val filePath = getFileServerDirectory(filename);
+      Files.delete(filePath);
+    } catch (IOException e) {
+      log.info("The following user profile picture: {} does not exit.", filename);
+    }
+  }
+
   private Path getFileServerDirectory(String filename) {
     val directory = environment.getRequiredProperty(FILE_SERVER_DIRECTORY);
     val directoryPath = Path.of(directory);

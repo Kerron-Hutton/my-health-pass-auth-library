@@ -185,6 +185,19 @@ class IdentityManagementTest {
   }
 
   @Test
+  @DisplayName("It should return false if user does not exist")
+  void itShouldReturnFalse() {
+    // Given
+    Long userId = faker.random().nextLong();
+
+    // When
+    Boolean status = underTest.removeUserProfilePicture(userId);
+
+    // Then
+    assertThat(status).isFalse();
+  }
+
+  @Test
   @DisplayName("It should throw exception if file data not defined")
   void itShouldThrowExceptionIfFileDataIsNotDefined() {
     // Given
@@ -229,6 +242,9 @@ class IdentityManagementTest {
         registeredUserId
     );
 
+    // Remove temp profile picture
+    underTest.removeUserProfilePicture(registeredUserId);
+
     // Then
     assertThat(userProfilePicture).isPresent();
 
@@ -236,6 +252,36 @@ class IdentityManagementTest {
       assertThat(data.getFilename()).isEqualTo(document.getFilename());
       assertThat(data.getBytes()).isEqualTo(document.getBytes());
     });
+  }
+
+  @Test
+  @DisplayName("It should remove profile picture")
+  void itShouldRemoveProfilePicture() {
+    // Given
+    String filename = faker.internet().slug();
+
+    FileDocument document = FileDocument.builder()
+        .bytes(filename.getBytes())
+        .filename(filename)
+        .build();
+
+    UserAccountDetailsDto accountDetails = accountDetailsBuilder
+        .fileDocument(document)
+        .build();
+
+    // When
+    long registeredUserId = underTest.register(accountDetails, validPassword);
+
+    // Remove temp profile picture
+    Boolean status = underTest.removeUserProfilePicture(registeredUserId);
+
+    Optional<UserEntity> user = userRepository.findById(registeredUserId);
+
+    // Then
+    assertThat(user).isPresent();
+    assertThat(status).isTrue();
+
+    assertThat(user.get().getProfilePicture()).isNull();
   }
 
 }

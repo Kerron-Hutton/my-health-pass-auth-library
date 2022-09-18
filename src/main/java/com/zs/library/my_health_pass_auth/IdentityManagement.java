@@ -146,6 +146,31 @@ public class IdentityManagement {
     return Optional.of(document);
   }
 
+  /**
+   * Remove user profile picture from the database and file server.
+   *
+   * @param userId user id to remove profile picture
+   * @return status of profile deletion
+   */
+  @Transactional
+  public boolean removeUserProfilePicture(Long userId) {
+    val user = repository.findById(userId);
+
+    if (user.isEmpty() || user.get().getProfilePicture() == null) {
+      return false;
+    }
+
+    val profilePicture = user.get().getProfilePicture();
+
+    user.get().setProfilePicture(null);
+
+    repository.save(user.get());
+
+    fileServerUtil.deleteFileFromServer(profilePicture);
+
+    return true;
+  }
+
   private void handleAccountLockStatus(UserEntity user) {
     val accountLockTimeout = Integer.parseInt(
         environment.getRequiredProperty(AUTHENTICATION_ACCOUNT_LOCK_DURATION)
