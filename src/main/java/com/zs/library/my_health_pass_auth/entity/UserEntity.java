@@ -39,6 +39,9 @@ public class UserEntity {
   @Column(name = "date_of_birth", nullable = false)
   private LocalDate dateOfBirth;
 
+  @Column(name = "profile_picture", length = 120)
+  private String profilePicture;
+
   @Column(name = "password", nullable = false, length = 64)
   private String password;
 
@@ -58,6 +61,10 @@ public class UserEntity {
     this.dateOfBirth = accountDetails.getDateOfBirth();
     this.username = accountDetails.getUsername();
     this.password = passwordHash;
+
+    if (accountDetails.getFileDocument() != null) {
+      this.profilePicture = accountDetails.getFileDocument().getFilename();
+    }
   }
 
 }
