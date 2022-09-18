@@ -67,9 +67,13 @@ class ApplicationConfig {
 
     val userRepository = factory.getRepository(UserEntityRepository.class);
 
+    val fileServerUtil = new FileServerUtil(environment);
+
     val jwtTokenUtil = new JwtTokenUtil(environment);
 
-    return new IdentityManagement(userRepository, jwtTokenUtil, environment);
+    return new IdentityManagement(
+        userRepository, fileServerUtil, jwtTokenUtil, environment
+    );
   }
 
   @Bean

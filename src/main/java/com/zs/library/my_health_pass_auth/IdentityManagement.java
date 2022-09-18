@@ -7,6 +7,7 @@ import static com.zs.library.my_health_pass_auth.EnvironmentVariableKeys.AUTHENT
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
+import com.zs.library.my_health_pass_auth.pojo.FileDocument;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class IdentityManagement {
 
   private final UserEntityRepository repository;
+
+  private final FileServerUtil fileServerUtil;
 
   private final JwtTokenUtil jwtTokenUtil;
 
@@ -51,6 +54,10 @@ public class IdentityManagement {
     val userToBeRegistered = new UserEntity(accountDetails, passwordHash);
 
     val registeredUser = repository.save(userToBeRegistered);
+
+    if (accountDetails.getFileDocument() != null) {
+      fileServerUtil.writeFileToServer(accountDetails.getFileDocument());
+    }
 
     return registeredUser.getId();
   }
@@ -117,6 +124,51 @@ public class IdentityManagement {
     repository.save(user);
 
     return Optional.empty();
+  }
+
+  /**
+   * Retrieves user profile from file server if present.
+   *
+   * @param userId user id to retrieve profile
+   * @return file document containing profile picture data
+   */
+  public Optional<FileDocument> getUserProfilePicture(Long userId) {
+    val user = repository.findById(userId);
+
+    if (user.isEmpty() || user.get().getProfilePicture() == null) {
+      return Optional.empty();
+    }
+
+    val document = fileServerUtil.readFileFromServer(
+        user.get().getProfilePicture()
+    );
+
+    return Optional.of(document);
+  }
+
+  /**
+   * Remove user profile picture from the database and file server.
+   *
+   * @param userId user id to remove profile picture
+   * @return status of profile deletion
+   */
+  @Transactional
+  public boolean removeUserProfilePicture(Long userId) {
+    val user = repository.findById(userId);
+
+    if (user.isEmpty() || user.get().getProfilePicture() == null) {
+      return false;
+    }
+
+    val profilePicture = user.get().getProfilePicture();
+
+    user.get().setProfilePicture(null);
+
+    repository.save(user.get());
+
+    fileServerUtil.deleteFileFromServer(profilePicture);
+
+    return true;
   }
 
   private void handleAccountLockStatus(UserEntity user) {
