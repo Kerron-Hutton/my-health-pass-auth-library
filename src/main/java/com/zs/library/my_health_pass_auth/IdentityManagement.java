@@ -1,21 +1,17 @@
 package com.zs.library.my_health_pass_auth;
 
-import static com.zs.library.my_health_pass_auth.AppSecretUtil.PASSWORD_VALIDATION_RULES;
-import static com.zs.library.my_health_pass_auth.EnvironmentVariableKeys.AUTHENTICATION_ACCOUNT_LOCK_DURATION;
-import static com.zs.library.my_health_pass_auth.EnvironmentVariableKeys.AUTHENTICATION_MAX_LOGIN_ATTEMPT;
-
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
 import com.zs.library.my_health_pass_auth.pojo.ApiRequestSignature;
 import com.zs.library.my_health_pass_auth.pojo.FileDocument;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.core.env.Environment;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -24,13 +20,13 @@ public class IdentityManagement {
 
   private final IdentityManagementHelper helper;
 
+  private final RegionRepository regionRepository;
+
   private final UserEntityRepository repository;
 
   private final FileServerUtil fileServerUtil;
 
   private final JwtTokenUtil jwtTokenUtil;
-
-  private final Environment environment;
 
   /**
    * Registers a new user in the MyHealthPass Application.
@@ -41,8 +37,10 @@ public class IdentityManagement {
    */
   @Transactional
   public Long register(UserAccountDetailsDto accountDetails, String password) {
-    val validationMessage = AppSecretUtil.validateSecretAgainstRules(
-        password, PASSWORD_VALIDATION_RULES
+    val region = regionRepository.findByRegionCode(accountDetails.getRegionCode());
+
+    val validationMessage = AppSecretUtil.validateSecretAgainstRegionRules(
+        password, region
     );
 
     if (validationMessage.isPresent()) {
@@ -56,6 +54,8 @@ public class IdentityManagement {
     val passwordHash = UserPasswordUtil.generatePasswordHash(password);
 
     val userToBeRegistered = new UserEntity(accountDetails, passwordHash);
+
+    userToBeRegistered.setRegion(region);
 
     val registeredUser = repository.save(userToBeRegistered);
 
@@ -112,7 +112,7 @@ public class IdentityManagement {
       user.setFailedLogins(0);
 
       return Optional.of(
-          jwtTokenUtil.generateUserAuthToken(userIdentity)
+          jwtTokenUtil.generateUserAuthToken(userIdentity, user.getRegion())
       );
     } else {
       val shouldContinue = helper.handleFailedLoginRequest(signature);
@@ -124,9 +124,7 @@ public class IdentityManagement {
 
     user.setFailedLogins(user.getFailedLogins() + 1);
 
-    val maxLoginAttempt = Integer.parseInt(
-        environment.getRequiredProperty(AUTHENTICATION_MAX_LOGIN_ATTEMPT)
-    );
+    val maxLoginAttempt = user.getRegion().getMaxFailedLogin();
 
     if (user.getFailedLogins() >= maxLoginAttempt) {
       user.setAccountLockTimestamp(LocalDateTime.now());
@@ -184,16 +182,15 @@ public class IdentityManagement {
   }
 
   private void handleAccountLockStatus(UserEntity user) {
-    val accountLockTimeout = Integer.parseInt(
-        environment.getRequiredProperty(AUTHENTICATION_ACCOUNT_LOCK_DURATION)
-    );
+    val accountLockTimeout = user.getRegion().getAccountLockDuration();
 
     if (user.isAccountLocked()) {
-      val durationSinceAccountLock = helper.getDurationInMinutes(
-          user.getAccountLockTimestamp(), LocalDateTime.now()
-      );
+      val durationSinceAccountLock = Duration.between(
+              user.getAccountLockTimestamp(), LocalDateTime.now()
+          )
+          .toMinutes();
 
-      if (durationSinceAccountLock > 0 && durationSinceAccountLock < accountLockTimeout) {
+      if (durationSinceAccountLock >= 0 && durationSinceAccountLock < accountLockTimeout) {
         throw new RuntimeException(
             String.format("User account is locked... timeout duration in %s minutes",
                 accountLockTimeout - durationSinceAccountLock

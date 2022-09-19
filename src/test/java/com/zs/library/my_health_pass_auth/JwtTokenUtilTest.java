@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.github.javafaker.Faker;
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
+import com.zs.library.my_health_pass_auth.entity.RegionEntity;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,11 @@ import org.springframework.core.env.Environment;
 class JwtTokenUtilTest {
 
   private final Faker faker = new Faker();
+
   private UserIdentityDto userIdentityInput;
+
+  private RegionEntity testRegion;
+
   private Environment environment;
 
   private JwtTokenUtil underTest;
@@ -37,6 +42,9 @@ class JwtTokenUtilTest {
     environment = Mockito.mock(Environment.class);
 
     underTest = new JwtTokenUtil(environment);
+
+    testRegion = new RegionEntity();
+    testRegion.setSessionDuration(1);
   }
 
   @Test
@@ -52,7 +60,7 @@ class JwtTokenUtilTest {
         .when(environment.getRequiredProperty(AUTHENTICATION_JWT_SECRET_PROPERTY))
         .thenReturn(secret);
 
-    String token = underTest.generateUserAuthToken(userIdentityInput);
+    String token = underTest.generateUserAuthToken(userIdentityInput, testRegion);
 
     // Then
     assertThat(token).startsWith(AUTHENTICATION_TOKEN_PREFIX);
@@ -72,7 +80,7 @@ class JwtTokenUtilTest {
         .thenReturn(secret);
 
     Throwable throwable = catchThrowable(
-        () -> underTest.generateUserAuthToken(userIdentityInput)
+        () -> underTest.generateUserAuthToken(userIdentityInput, testRegion)
     );
 
     // Then
@@ -92,7 +100,7 @@ class JwtTokenUtilTest {
         .when(environment.getRequiredProperty(AUTHENTICATION_JWT_SECRET_PROPERTY))
         .thenReturn(secret);
 
-    String token = underTest.generateUserAuthToken(userIdentityInput);
+    String token = underTest.generateUserAuthToken(userIdentityInput, testRegion);
 
     UserIdentityDto userData = underTest.getUserIdentityIfTokenIsValid(token);
 
@@ -119,7 +127,7 @@ class JwtTokenUtilTest {
         .when(environment.getRequiredProperty(AUTHENTICATION_JWT_SECRET_PROPERTY))
         .thenReturn(secret);
 
-    String token = underTest.generateUserAuthToken(userIdentityInput);
+    String token = underTest.generateUserAuthToken(userIdentityInput, testRegion);
 
     Throwable throwable = catchThrowable(
         () -> underTest.getUserIdentityIfTokenIsValid(String.format("%s_as3", token))

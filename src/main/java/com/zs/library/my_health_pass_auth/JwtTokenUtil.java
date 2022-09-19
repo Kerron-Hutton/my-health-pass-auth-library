@@ -3,6 +3,7 @@ package com.zs.library.my_health_pass_auth;
 import javax.crypto.SecretKey;
 
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
+import com.zs.library.my_health_pass_auth.entity.RegionEntity;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.time.LocalDateTime;
@@ -21,16 +22,16 @@ class JwtTokenUtil {
 
   public static final String TOKEN_PAYLOAD_ATTRIBUTE = "payload";
 
-  public static final int TOKEN_EXPIATION_IN_HOURS = 3;
-
   private final Environment environment;
 
-  public String generateUserAuthToken(UserIdentityDto userIdentity) {
+  public String generateUserAuthToken(UserIdentityDto userIdentity, RegionEntity region) {
+    val sessionDuration = getTokenExpirationDateTime(region);
+
     val token = Jwts.builder()
         .claim(TOKEN_PAYLOAD_ATTRIBUTE, userIdentity)
-        .setExpiration(getTokenExpirationDateTime())
         .setIssuedAt(getTokenIssueAtDateTime())
         .setSubject(userIdentity.getUsername())
+        .setExpiration(sessionDuration)
         .signWith(getSecretKey())
         .compact();
 
@@ -70,9 +71,9 @@ class JwtTokenUtil {
     return Keys.hmacShaKeyFor(jwtSecret.getBytes());
   }
 
-  private Date getTokenExpirationDateTime() {
+  private Date getTokenExpirationDateTime(RegionEntity region) {
     return java.sql.Timestamp.valueOf(
-        LocalDateTime.now().plusHours(TOKEN_EXPIATION_IN_HOURS)
+        LocalDateTime.now().plusMinutes(region.getSessionDuration())
     );
   }
 
