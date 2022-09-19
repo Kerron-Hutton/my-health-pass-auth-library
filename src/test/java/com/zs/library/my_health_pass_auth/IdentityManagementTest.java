@@ -11,6 +11,7 @@ import com.zs.library.my_health_pass_auth.configuration.annotations.enable_postg
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
+import com.zs.library.my_health_pass_auth.enums.RegionCode;
 import com.zs.library.my_health_pass_auth.pojo.ApiRequestSignature;
 import com.zs.library.my_health_pass_auth.pojo.FileDocument;
 import java.time.LocalDate;
@@ -56,6 +57,7 @@ class IdentityManagementTest {
         .username(faker.internet().emailAddress())
         .firstName(faker.name().firstName())
         .lastName(faker.name().lastName())
+        .regionCode(RegionCode.JAM)
         .dateOfBirth(dateOfBirth);
 
     validPassword = PasswordGeneratorUtil.generateValidPassword(

@@ -2,7 +2,9 @@ package com.zs.library.my_health_pass_auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import com.zs.library.my_health_pass_auth.entity.RegionEntity;
 import com.zs.library.my_health_pass_auth.pojo.ValidationError;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -75,4 +77,34 @@ final class AppSecretUtil {
             .writeValueAsString(validationErrors)
     );
   }
+
+  /**
+   * Validates a given secret against region rules.
+   *
+   * @param secret secret that requires validation
+   * @param region region to validate secret against
+   * @return list of error messages if password fail
+   */
+  public static Optional<String> validateSecretAgainstRegionRules(String secret, RegionEntity region) {
+    val rules = new ArrayList<Rule>();
+
+    val lengthRule = new LengthRule(
+        region.getMinPasswordLength(), region.getMaxPasswordLength()
+    );
+
+    if (region.isIncludeDigit()) {
+      val rule = new CharacterRule(EnglishCharacterData.Digit, 1);
+      rules.add(rule);
+    }
+
+    if (region.isIncludeSpecialCharacter()) {
+      val rule = new CharacterRule(EnglishCharacterData.Special, 1);
+      rules.add(rule);
+    }
+
+    rules.add(lengthRule);
+
+    return validateSecretAgainstRules(secret, rules);
+  }
+
 }
