@@ -65,14 +65,20 @@ class ApplicationConfig {
   public IdentityManagement identityManagementBean(EntityManager entityManager, Environment environment) {
     val factory = new JpaRepositoryFactory(entityManager);
 
+    val failedRequestRepository = factory.getRepository(FailedRequestRepository.class);
+
     val userRepository = factory.getRepository(UserEntityRepository.class);
 
     val fileServerUtil = new FileServerUtil(environment);
 
     val jwtTokenUtil = new JwtTokenUtil(environment);
 
+    val helper = new IdentityManagementHelper(
+        failedRequestRepository, environment
+    );
+
     return new IdentityManagement(
-        userRepository, fileServerUtil, jwtTokenUtil, environment
+        helper, userRepository, fileServerUtil, jwtTokenUtil, environment
     );
   }
 

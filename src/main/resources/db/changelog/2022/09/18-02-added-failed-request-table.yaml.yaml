@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 1663527452620-1
+      id: 1663551342738-1
       author: HuttonKM (generated)
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -9,7 +9,7 @@ databaseChangeLog:
             sequenceName: failed_request_seq
             startValue: 1
   - changeSet:
-      id: 1663527452620-2
+      id: 1663551342738-2
       author: HuttonKM (generated)
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -30,24 +30,23 @@ databaseChangeLog:
               - column:
                   constraints:
                     nullable: false
-                  name: failed_attempts
-                  type: INT
-              - column:
-                  constraints:
-                    nullable: false
-                  name: first_failed_attempt
-                  type: DATETIME
-              - column:
-                  name: last_failed_attempt
-                  type: DATETIME
-              - column:
-                  constraints:
-                    nullable: false
                   name: request_hash_code
                   type: INT
+              - column:
+                  name: timestamp
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false
+                  name: is_request_blocked
+                  type: boolean
+              - column:
+                  name: request_block_timestamp
+                  type: DATETIME
             tableName: failed_request
   - changeSet:
-      id: 1663527452620-3
+      id: 1663551342738-3
       author: HuttonKM (generated)
       objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
       changes:
@@ -57,6 +56,5 @@ databaseChangeLog:
                   name: api_request
               - column:
                   name: request_hash_code
-            indexName: idx_failed_request_entity_unq
+            indexName: idx_failed_request_entity
             tableName: failed_request
-            unique: true

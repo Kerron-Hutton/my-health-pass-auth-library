@@ -11,6 +11,7 @@ import com.zs.library.my_health_pass_auth.configuration.annotations.enable_postg
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
+import com.zs.library.my_health_pass_auth.pojo.ApiRequestSignature;
 import com.zs.library.my_health_pass_auth.pojo.FileDocument;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -148,13 +149,18 @@ class IdentityManagementTest {
     // Given
     UserAccountDetailsDto accountDetails = accountDetailsBuilder.build();
 
+    ApiRequestSignature signature = ApiRequestSignature.builder()
+        .userAgent(faker.internet().userAgentAny())
+        .clientIp(faker.internet().ipV4Address())
+        .build();
+
     // When
     long registeredUserId = underTest.register(accountDetails, validPassword);
 
     UserEntity user = userRepository.findById(registeredUserId)
         .orElse(null);
 
-    String token = underTest.login(user.getUsername(), validPassword)
+    String token = underTest.login(user.getUsername(), validPassword, signature)
         .orElse(null);
 
     UserIdentityDto userIdentity = underTest.authenticate(token);

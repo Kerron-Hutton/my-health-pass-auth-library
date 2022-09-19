@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.github.javafaker.Faker;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
+import com.zs.library.my_health_pass_auth.pojo.ApiRequestSignature;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,11 @@ class LoginRequestTest {
 
   private final Faker faker = new Faker();
 
+  private IdentityManagementHelper identityManagementHelper;
+
   private UserEntityRepository userRepository;
+
+  private ApiRequestSignature testSignature;
 
   private IdentityManagement underTest;
 
@@ -28,9 +33,9 @@ class LoginRequestTest {
 
   private Environment environment;
 
-
   @BeforeEach
   void setup() {
+    identityManagementHelper = Mockito.mock(IdentityManagementHelper.class);
     FileServerUtil fileServerUtil = Mockito.mock(FileServerUtil.class);
 
     userRepository = Mockito.mock(UserEntityRepository.class);
@@ -38,8 +43,14 @@ class LoginRequestTest {
     environment = Mockito.mock(Environment.class);
 
     underTest = new IdentityManagement(
-        userRepository, fileServerUtil, jwtTokenUtil, environment
+        identityManagementHelper, userRepository,
+        fileServerUtil, jwtTokenUtil, environment
     );
+
+    testSignature = ApiRequestSignature.builder()
+        .userAgent(faker.internet().userAgentAny())
+        .clientIp(faker.internet().ipV4Address())
+        .build();
   }
 
   @Test
@@ -54,7 +65,7 @@ class LoginRequestTest {
         .when(userRepository.findByUsername(username))
         .thenReturn(Optional.empty());
 
-    Optional<String> token = underTest.login(username, password);
+    Optional<String> token = underTest.login(username, password, testSignature);
 
     // Then
     assertThat(token).isNotPresent();
@@ -80,8 +91,12 @@ class LoginRequestTest {
         .when(environment.getRequiredProperty(AUTHENTICATION_ACCOUNT_LOCK_DURATION))
         .thenReturn("2");
 
+    Mockito
+        .when(identityManagementHelper.handleFailedLoginRequest(Mockito.any()))
+        .thenReturn(true);
+
     Throwable throwable = catchThrowable(
-        () -> underTest.login(username, password)
+        () -> underTest.login(username, password, testSignature)
     );
 
     // Then
@@ -98,6 +113,7 @@ class LoginRequestTest {
     UserEntity userByUsername = Mockito.spy(UserEntity.class);
     userByUsername.setAccountLockTimestamp(LocalDateTime.now().plusHours(1));
     userByUsername.setAccountLocked(true);
+    userByUsername.setUsername(username);
 
     // When
     Mockito
@@ -112,7 +128,11 @@ class LoginRequestTest {
         .when(environment.getRequiredProperty(AUTHENTICATION_MAX_LOGIN_ATTEMPT))
         .thenReturn("2");
 
-    Optional<String> token = underTest.login(username, password);
+    Mockito
+        .when(identityManagementHelper.handleFailedLoginRequest(Mockito.any()))
+        .thenReturn(true);
+
+    Optional<String> token = underTest.login(username, password, testSignature);
 
     // Then
     assertThat(token).isNotPresent();
@@ -149,7 +169,11 @@ class LoginRequestTest {
         .when(environment.getRequiredProperty(AUTHENTICATION_MAX_LOGIN_ATTEMPT))
         .thenReturn(String.valueOf(failedLoginAttempts));
 
-    Optional<String> token = underTest.login(username, password);
+    Mockito
+        .when(identityManagementHelper.handleFailedLoginRequest(Mockito.any()))
+        .thenReturn(true);
+
+    Optional<String> token = underTest.login(username, password, testSignature);
 
     // Then
     assertThat(token).isNotPresent();
@@ -188,7 +212,7 @@ class LoginRequestTest {
         .when(jwtTokenUtil.generateUserAuthToken(Mockito.any()))
         .thenReturn(sampleToken);
 
-    Optional<String> token = underTest.login(username, password);
+    Optional<String> token = underTest.login(username, password, testSignature);
 
     // Then
     assertThat(token).isPresent();

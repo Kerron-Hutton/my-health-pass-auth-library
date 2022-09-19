@@ -24,8 +24,7 @@ import lombok.Setter;
 @Table(name = "failed_request", indexes = {
     @Index(
         columnList = "api_request, request_hash_code",
-        name = "idx_failed_request_entity_unq",
-        unique = true
+        name = "idx_failed_request_entity"
     )
 })
 public class FailedRequestEntity {
@@ -39,16 +38,16 @@ public class FailedRequestEntity {
   @Enumerated(EnumType.STRING)
   private ApiRequestName apiRequest;
 
-  @Column(name = "failed_attempts", nullable = false)
-  private int failedAttempts;
-
-  @Column(name = "first_failed_attempt", nullable = false)
-  private LocalDateTime firstFailedAttempt;
-
-  @Column(name = "last_failed_attempt")
-  private LocalDateTime lastFailedAttempt;
-
   @Column(name = "request_hash_code", nullable = false)
   private int requestHashCode;
+
+  @Column(name = "timestamp")
+  private LocalDateTime timestamp;
+
+  @Column(name = "is_request_blocked", columnDefinition = "boolean default false")
+  private boolean isRequestBlocked;
+
+  @Column(name = "request_block_timestamp")
+  private LocalDateTime requestBlockTimestamp;
 
 }

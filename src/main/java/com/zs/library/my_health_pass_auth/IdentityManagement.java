@@ -7,18 +7,22 @@ import static com.zs.library.my_health_pass_auth.EnvironmentVariableKeys.AUTHENT
 import com.zs.library.my_health_pass_auth.dto.UserAccountDetailsDto;
 import com.zs.library.my_health_pass_auth.dto.UserIdentityDto;
 import com.zs.library.my_health_pass_auth.entity.UserEntity;
+import com.zs.library.my_health_pass_auth.pojo.ApiRequestSignature;
 import com.zs.library.my_health_pass_auth.pojo.FileDocument;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.core.env.Environment;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 public class IdentityManagement {
+
+  private final IdentityManagementHelper helper;
 
   private final UserEntityRepository repository;
 
@@ -75,15 +79,17 @@ public class IdentityManagement {
   /**
    * Authenticate user their credentials.
    *
-   * @param username user defined application identifier.
-   * @param password user secret credentials required for identification
+   * @param username  user defined application identifier.
+   * @param password  user secret credentials required for identification
+   * @param signature unique signature base on api request
    * @return valid token if authentication is successful
    */
-  @Transactional
-  public Optional<String> login(String username, String password) {
+  @Transactional()
+  public Optional<String> login(String username, String password, ApiRequestSignature signature) {
     val user = repository.findByUsername(username).orElse(null);
 
     if (user == null) {
+      helper.handleFailedLoginRequest(signature);
       return Optional.empty();
     }
 
@@ -108,6 +114,12 @@ public class IdentityManagement {
       return Optional.of(
           jwtTokenUtil.generateUserAuthToken(userIdentity)
       );
+    } else {
+      val shouldContinue = helper.handleFailedLoginRequest(signature);
+
+      if (!shouldContinue) {
+        return Optional.empty();
+      }
     }
 
     user.setFailedLogins(user.getFailedLogins() + 1);
@@ -177,14 +189,13 @@ public class IdentityManagement {
     );
 
     if (user.isAccountLocked()) {
-      val durationSinceAccountLock = Duration.between(
-              user.getAccountLockTimestamp(), LocalDateTime.now()
-          )
-          .toMinutes();
+      val durationSinceAccountLock = helper.getDurationInMinutes(
+          user.getAccountLockTimestamp(), LocalDateTime.now()
+      );
 
       if (durationSinceAccountLock > 0 && durationSinceAccountLock < accountLockTimeout) {
         throw new RuntimeException(
-            String.format("User account is locked... Please try again in %s minutes",
+            String.format("User account is locked... timeout duration in %s minutes",
                 accountLockTimeout - durationSinceAccountLock
             )
         );
@@ -195,5 +206,6 @@ public class IdentityManagement {
       user.setFailedLogins(0);
     }
   }
+
 
 }
