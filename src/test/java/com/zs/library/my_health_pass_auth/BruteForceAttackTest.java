@@ -44,6 +44,28 @@ class BruteForceAttackTest {
   }
 
   @Test
+  @DisplayName("It should pass if signature with the same data is equal")
+  void itShouldPassIfSignatureMatches() {
+    // Given
+    ApiRequestSignature signature = ApiRequestSignature.builder()
+        .userAgent(testSignature.getUserAgent())
+        .clientIp(testSignature.getClientIp())
+        .cookies(testSignature.getCookies())
+        .build();
+
+    // When
+    boolean isEqual = signature.equals(testSignature);
+
+    int hashCodeOne = testSignature.hashCode();
+    int hashCodeTwo = signature.hashCode();
+
+    // Then
+    assertThat(hashCodeOne).isEqualTo(hashCodeTwo);
+
+    assertThat(isEqual).isTrue();
+  }
+
+  @Test
   @DisplayName("It should return false if request is blocked")
   void itShouldReturnFalseIfRequestIsStillBlocked() {
     // Given

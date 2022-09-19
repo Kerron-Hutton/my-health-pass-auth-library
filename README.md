@@ -32,6 +32,13 @@ developer configure IntelliJ to integrate with our custom checkstyle configurati
     - CHECK `Ensure right margin is not exceeded`
     - Click OK
 
+## Integration Testing
+
+To facilitate integration testing the java library **Testcontainers** was used. additional information can be found  
+on **[Getting started with Testcontainers](https://www.testcontainers.org/quickstart/junit_5_quickstart/)**.
+
+***Note:*** You must have docker running!! No additional configurations are required.
+
 ## Installing Package
 
 In order to install our library the below configurations should be added to your `~/.m2/settings.xml` file.  
@@ -90,21 +97,25 @@ In pom.xml, add the following xml stanza between `<dependencies> ... </dependenc
 <dependency>
     <groupId>com.zs.library</groupId>
     <artifactId>my-health-pass-auth</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
 Specify the below required environment variable:
 
 ```properties
+# If the max request failure is reached within in this time (minutes) the
+# api request will be blocked until lockout duration is met.
+request.signature_failure.threshold=0
+# Duration in minutes that api request will be blocked for.
+request.signature_lock.duration=0
+# The maximum amount of time that an api request can fail.
+request.signature_max.failure=0
+# File server directory that profile pictures will be stored in.
+file.server.directory=""
 # The secret must be between 32 and 64 character and include at least 
 # one number, digit, special, uppercase and lower case characters.
 authentication.jwt.secret=""
-# Duration in minutes that the user's account will be locked for.
-authentication.account_lock.duration=0
-# The maximum amount of time invalid credentials can be entered
-# before locking the user's account.
-authentication.max.login.attempt=0
 ```
 
 Example use in a spring boot application
@@ -121,8 +132,15 @@ public class MyHealthPass {
   @Bean
   CommandLineRunner runner() {
     return args -> {
+      ApiRequestSignature apiSignature = ApiRequestSignature.builder()
+          .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")
+          .cookies(Map.of("SID", "234032QE21_"))
+          .clientIp("207.207.130.108")
+          .build();
+
       UserAccountDetailsDto accountDetailsDto = UserAccountDetailsDto.builder()
           .dateOfBirth(LocalDate.parse("2010-09-03"))
+          .regionCode(RegionCode.CAN)
           .username("john.brown876")
           .firstName("John")
           .lastName("Brown")
@@ -137,7 +155,7 @@ public class MyHealthPass {
       Optional<UserEntity> registeredUser = repository.findById(registerUserId);
 
       Optional<String> userAuthToken = identity.login(
-          accountDetailsDto.getUsername(), password
+          accountDetailsDto.getUsername(), password, apiSignature
       );
 
       UserIdentityDto userIdentity = identity.authenticate(userAuthToken.get());
@@ -149,4 +167,18 @@ public class MyHealthPass {
     };
   }
 }
+```
+
+## Database Schema
+
+![Schema](documentation/my-health-pass-database-schema.svg)
+
+## Additional Document
+
+The `My Health Pass Auth Library` documentation UI can be found in the following directory:
+
+```
+├── documentation
+│   ├── apidocs
+│   │   ├── index.html
 ```
