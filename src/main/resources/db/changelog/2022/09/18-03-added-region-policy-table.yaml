@@ -1,0 +1,102 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1663562824969-1
+      author: HuttonKM (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createSequence:
+            incrementBy: 1
+            sequenceName: region_seq
+            startValue: 1
+  - changeSet:
+      id: 1663562824969-2
+      author: HuttonKM (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_region
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: code
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: session_duration
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: account_lock_duration
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: max_failed_login
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: min_password_length
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: max_password_length
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false
+                  name: include_digit
+                  type: boolean
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false
+                  name: include_special_character
+                  type: boolean
+            tableName: region
+  - changeSet:
+      id: 1663562824969-3
+      author: HuttonKM (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: region_id
+                  type: BIGINT
+            tableName: user
+  - changeSet:
+      id: 1663562824969-4
+      author: HuttonKM (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: region_id
+            tableName: user
+  - changeSet:
+      id: 1663562824969-5
+      author: HuttonKM (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: region_id
+            baseTableName: user
+            constraintName: FK_USER_ON_REGION
+            referencedColumnNames: id
+            referencedTableName: region

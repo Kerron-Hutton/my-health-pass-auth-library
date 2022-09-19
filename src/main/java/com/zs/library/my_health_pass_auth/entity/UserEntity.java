@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -53,6 +55,10 @@ public class UserEntity {
 
   @Column(name = "account_lock_timestamp")
   private LocalDateTime accountLockTimestamp;
+
+  @ManyToOne
+  @JoinColumn(name = "region_id", nullable = false)
+  private RegionEntity region;
 
   public UserEntity(UserAccountDetailsDto accountDetails, String passwordHash) {
     this.firstName = accountDetails.getFirstName();
